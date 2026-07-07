@@ -6,7 +6,7 @@ Status: ACTIVE
 
 ---
 
-# 1. Vision
+# Vision
 
 TRF (Trading Research Framework) is a professional research platform for
 designing, validating, improving and eventually executing quantitative
@@ -34,7 +34,7 @@ Live trading, AI and optimization are intentionally postponed.
 
 ---
 
-# 2. Objectives
+# Objectives
 
 Version 1 has six primary objectives.
 
@@ -103,7 +103,7 @@ All architectural knowledge belongs inside the repository.
 
 ---
 
-# 3. Scope of Version 1
+# Scope of Version 1
 
 Version 1 contains only the components required for a reliable
 single-symbol backtesting engine.
@@ -135,7 +135,7 @@ No additional functionality may enter Version 1.
 
 ---
 
-# 4. Out of Scope
+# Out of Scope
 
 The following features are explicitly postponed.
 
@@ -161,7 +161,7 @@ docs/BACKLOG_V2.md.
 
 ---
 
-# 5. Core Principles
+# Core Principles
 
 The following principles are mandatory.
 
@@ -206,7 +206,9 @@ Every important action should be visible, predictable and testable.
 Every architectural decision should assume that the project will still
 exist five years from now.
 
-# 6. Architecture Rules
+---
+
+# Architecture Rules
 
 The architecture defined in this document is mandatory.
 
@@ -515,3 +517,232 @@ Instead:
 1. Document it in BACKLOG_V2.md.
 
 2. Continue Version 1 development.
+
+---
+
+# Trading Execution Flow
+
+The complete trading execution pipeline is defined as follows.
+
+```
+Market Data
+        ↓
+Market Window
+        ↓
+Feature Pipeline
+        ↓
+Market State
+        ↓
+Strategy
+        ↓
+Signal
+        ↓
+Risk Manager
+        ↓
+Order
+        ↓
+Broker
+        ↓
+Position
+        ↓
+Portfolio
+        ↓
+Journal
+        ↓
+Reports
+```
+
+Each component has one responsibility.
+
+---
+
+## Strategy
+
+A Strategy analyzes the current MarketState.
+
+Its only responsibility is deciding whether a trading opportunity exists.
+
+A Strategy never:
+
+- calculates position size
+- calculates risk
+- executes orders
+- manages positions
+- updates portfolio
+
+The output of a Strategy is a Signal.
+
+---
+
+## Signal
+
+A Signal represents a trading opportunity.
+
+A Signal contains only market intent.
+
+Examples:
+
+- LONG
+- SHORT
+- CLOSE
+
+A Signal may contain:
+
+- entry
+- stop
+- target
+- confidence
+- reason
+- metadata
+
+A Signal never contains:
+
+- quantity
+- position size
+- account balance
+- leverage
+- commission
+- slippage
+
+Signal is independent from account information.
+
+---
+
+## Risk Manager
+
+Risk Manager converts a Signal into an executable Order.
+
+Responsibilities:
+
+- calculate position size
+- validate account risk
+- validate stop distance
+- reject invalid signals
+- apply risk policy
+
+Risk Manager is the only component allowed to calculate quantity.
+
+---
+
+## Order
+
+Order represents an executable instruction.
+
+Examples:
+
+BUY
+
+SELL
+
+CLOSE
+
+An Order contains:
+
+- symbol
+- side
+- quantity
+- entry
+- stop
+- target
+
+Order never contains portfolio statistics.
+
+---
+
+## Broker
+
+Broker receives Orders.
+
+Responsibilities:
+
+- execute order
+- apply commission
+- apply slippage
+- create Position
+
+Version 1 implements only PaperBroker.
+
+---
+
+## Position
+
+A Position exists only after execution.
+
+A Position represents an open trade.
+
+Responsibilities:
+
+- entry price
+- exit price
+- quantity
+- pnl
+- duration
+- status
+
+A Position never generates Signals.
+
+---
+
+## Portfolio
+
+Portfolio manages capital.
+
+Responsibilities:
+
+- balance
+- equity
+- open positions
+- closed positions
+- exposure
+- drawdown
+
+Portfolio never makes trading decisions.
+
+---
+
+## Journal
+
+Journal records every important event.
+
+Examples:
+
+- Signal generated
+- Order executed
+- Position opened
+- Position closed
+
+Journal never performs calculations.
+
+---
+
+## Reports
+
+Reports are generated only from historical data.
+
+Reports never modify trading results.
+
+Reports are read-only outputs.
+
+---
+
+## Architectural Rule
+
+Each stage communicates only with the next stage.
+
+Skipping layers is forbidden.
+
+For example:
+
+Strategy → Broker
+
+is forbidden.
+
+Strategy → Portfolio
+
+is forbidden.
+
+Feature → Broker
+
+is forbidden.
+
+Every decision must pass through the complete execution pipeline.
