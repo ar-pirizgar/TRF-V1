@@ -20,6 +20,11 @@ before making any change.
 
 If a requested implementation conflicts with the specification, stop and explain the conflict instead of changing the architecture.
 
+Also read:
+
+docs/CODEX_INSTRUCTIONS.md
+
+Treat both documents as the single source of truth.
 ---
 
 # Coding Standards
@@ -119,3 +124,21 @@ After every task provide:
 4. Whether additional files were created.
 
 Do not produce unnecessary explanations.
+
+
+---
+
+# When Unsure
+
+If a requirement is ambiguous:
+
+- Do not guess.
+- Do not redesign the architecture.
+- Ask for clarification.
+
+If the requested change conflicts with the project architecture:
+
+- Explain the conflict.
+- Wait for approval before implementing.
+
+Never silently change the architecture.
