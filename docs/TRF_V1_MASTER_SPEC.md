@@ -205,3 +205,313 @@ Every important action should be visible, predictable and testable.
 
 Every architectural decision should assume that the project will still
 exist five years from now.
+
+# 6. Architecture Rules
+
+The architecture defined in this document is mandatory.
+
+No implementation may violate these rules without an explicit architectural decision.
+
+---
+
+## Rule 1 — Layer Isolation
+
+Each layer has exactly one responsibility.
+
+No layer may perform the responsibility of another layer.
+
+Example:
+
+Strategy generates signals.
+
+Broker executes orders.
+
+Portfolio manages capital.
+
+Engine orchestrates everything.
+
+---
+
+## Rule 2 — Dependency Direction
+
+Dependencies always point downward.
+
+Strategy
+
+↓
+
+Signal
+
+↓
+
+Risk
+
+↓
+
+Order
+
+↓
+
+Broker
+
+↓
+
+Position
+
+↓
+
+Portfolio
+
+↓
+
+Journal
+
+No reverse dependency is allowed.
+
+Portfolio must never know Strategy.
+
+Broker must never know Indicators.
+
+Indicators must never know Portfolio.
+
+---
+
+## Rule 3 — Market Data Flow
+
+Market information always follows this path.
+
+CSV Feed
+
+↓
+
+Market Window
+
+↓
+
+Feature Pipeline
+
+↓
+
+Market State
+
+↓
+
+Strategy
+
+Strategies never read raw CSV data.
+
+Strategies never calculate indicators.
+
+---
+
+## Rule 4 — Feature Pipeline
+
+Every market feature is implemented independently.
+
+Examples:
+
+EMA
+
+ATR
+
+ADX
+
+RSI
+
+Liquidity
+
+Volume
+
+Future Elliott Context
+
+Future AI Context
+
+Each feature receives:
+
+- MarketWindow
+- MarketState
+
+Each feature updates only MarketState.
+
+Features must never communicate directly with each other.
+
+---
+
+## Rule 5 — Strategy
+
+A Strategy has only one responsibility:
+
+Generate trading Signals.
+
+Strategies must never:
+
+- open positions
+- calculate risk
+- execute orders
+- update portfolio
+- write reports
+
+---
+
+## Rule 6 — Signal
+
+Signal represents only a trading idea.
+
+A Signal contains:
+
+- direction
+- entry
+- stop
+- target
+- confidence
+
+A Signal never contains:
+
+- quantity
+- position size
+- commission
+- slippage
+
+---
+
+## Rule 7 — Order
+
+Order represents an executable instruction.
+
+Risk management converts Signals into Orders.
+
+Broker executes Orders.
+
+---
+
+## Rule 8 — Position
+
+A Position is created only after an Order has been executed.
+
+A Position owns:
+
+- entry price
+- exit price
+- quantity
+- pnl
+- duration
+
+A Position never communicates with Strategy.
+
+---
+
+## Rule 9 — Portfolio
+
+Portfolio is responsible only for capital.
+
+Responsibilities:
+
+- Balance
+- Equity
+- Open Positions
+- Closed Positions
+- Drawdown
+- Risk Statistics
+
+Portfolio never creates trades.
+
+Portfolio never executes trades.
+
+---
+
+## Rule 10 — Broker
+
+Version 1 contains only PaperBroker.
+
+Broker responsibilities:
+
+- Execute Orders
+- Apply Commission
+- Apply Slippage
+- Create Positions
+
+Nothing else.
+
+---
+
+## Rule 11 — Engine
+
+Engine coordinates the framework.
+
+Engine never performs calculations.
+
+Engine never makes trading decisions.
+
+Engine only orchestrates the execution pipeline.
+
+---
+
+## Rule 12 — Event Driven
+
+Communication between major components should occur through Events whenever practical.
+
+Core events include:
+
+- New Candle
+- Features Updated
+- Signal Generated
+- Order Created
+- Order Filled
+- Position Opened
+- Position Closed
+- Backtest Started
+- Backtest Finished
+- Error
+
+---
+
+## Rule 13 — Numeric Precision
+
+Every financial value must use Decimal.
+
+Examples:
+
+Prices
+
+Profit
+
+Loss
+
+Commission
+
+Slippage
+
+Position Size
+
+Risk
+
+Reward
+
+Float is prohibited for financial calculations.
+
+---
+
+## Rule 14 — Core Independence
+
+The Core package must remain lightweight.
+
+Core must never depend on:
+
+- pandas
+- numpy
+- matplotlib
+- broker APIs
+
+Core should be reusable in any environment.
+
+---
+
+## Rule 15 — Scope Protection
+
+If a requested feature is outside Version 1 scope, it must not be implemented.
+
+Instead:
+
+1. Document it in BACKLOG_V2.md.
+
+2. Continue Version 1 development.
